@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RunBeat - 러닝 플레이리스트 & 기록</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f;
+  --accent: #00e676; --accent2: #00c853; --accent-dim: rgba(0,230,118,0.15);
+  --text: #eaeaea; --text2: #9a9ab0;
+  --danger: #ff5252; --orange: #ff9100; --blue: #448aff; --purple: #b388ff;
+  --pink: #ff80ab; --yellow: #ffd740; --cyan: #18ffff;
+  --radius: 14px;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+.header { text-align: center; padding: 32px 20px 16px; }
+.header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
+
+.tabs { display: flex; justify-content: center; gap: 4px; padding: 0 16px; margin-bottom: 24px; }
+.tab { flex: 1; max-width: 160px; padding: 12px 8px; background: var(--surface); border: none; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: var(--radius); }
+.tab:hover { background: var(--surface2); }
+.tab.active { background: var(--accent-dim); color: var(--accent); }
+.tab-icon { font-size: 20px; display: block; margin-bottom: 4px; }
+
+.content { max-width: 600px; margin: 0 auto; padding: 0 16px 100px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+/* Theme Selection */
+.theme-section-title { font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+.theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.theme-card {
+  padding: 16px; border-radius: 12px; border: 2px solid transparent;
+  cursor: pointer; transition: all 0.2s; text-align: center;
+}
+.theme-card:hover { transform: translateY(-2px); }
+.theme-card.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,230,118,0.15); }
+.theme-emoji { font-size: 28px; margin-bottom: 6px; }
+.theme-name { font-size: 14px; font-weight: 700; }
+.theme-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* BPM mini selector */
+.bpm-mini { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+.bpm-chip {
+  padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: 2px solid var(--surface2); background: var(--surface2); color: var(--text2);
+  transition: all 0.2s;
+}
+.bpm-chip:hover { border-color: var(--accent); color: var(--text); }
+.bpm-chip.selected { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+.btn-generate {
+  width: 100%; padding: 16px; border-radius: var(--radius); border: none;
+  background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #000;
+  font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+}
+.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,230,118,0.3); }
+.btn-generate:active { transform: scale(0.98); }
+
+/* Playlist */
+.playlist-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+.playlist-meta h3 { font-size: 15px; font-weight: 700; }
+.playlist-meta-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.meta-tag { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+.meta-tag.bpm { color: var(--accent); background: var(--accent-dim); }
+.meta-tag.time { color: var(--blue); background: rgba(68,138,255,0.15); }
+.meta-tag.count { color: var(--purple); background: rgba(179,136,255,0.15); }
+
+.song-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 4px; transition: background 0.15s; }
+.song-item:hover { background: var(--surface2); }
+.song-num { width: 24px; text-align: center; color: var(--text2); font-size: 13px; font-weight: 600; }
+.song-info { flex: 1; min-width: 0; }
+.song-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-artist { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.song-dur { font-size: 11px; color: var(--text2); margin-left: auto; white-space: nowrap; }
+.song-bpm { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-dim); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+.song-remove { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 6px; transition: all 0.15s; }
+.song-remove:hover { color: var(--danger); background: rgba(255,82,82,0.1); }
+
+.save-playlist-section { margin-top: 16px; display: flex; gap: 8px; }
+.playlist-name-input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 2px solid var(--surface2); background: var(--surface2); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
+.playlist-name-input:focus { border-color: var(--accent); }
+.btn-save { padding: 12px 20px; border-radius: 10px; border: none; background: var(--accent-dim); color: var(--accent); font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-save:hover { background: var(--accent); color: #000; }
+
+.saved-playlist-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 10px; margin-bottom: 8px; background: var(--surface2); cursor: pointer; transition: all 0.15s; }
+.saved-playlist-item:hover { background: #2a2a3a; }
+.saved-pl-info h4 { font-size: 14px; font-weight: 600; }
+.saved-pl-info p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.btn-icon.delete:hover { color: var(--danger); background: rgba(255,82,82,0.1); }
+
+/* Record Form */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 12px 16px; border-radius: 10px; border: 2px solid var(--surface2); background: var(--surface2); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; font-family: inherit; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+.form-select { cursor: pointer; }
+.form-select option { background: var(--surface); }
+.form-textarea { resize: vertical; min-height: 60px; }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.btn-record { width: 100%; padding: 16px; border-radius: var(--radius); border: none; background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.btn-record:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(68,138,255,0.3); }
+
+/* Dashboard */
+.stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+.stat-card { background: var(--surface2); border-radius: 12px; padding: 16px; text-align: center; }
+.stat-value { font-size: 28px; font-weight: 800; line-height: 1.2; }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.stat-value.green { color: var(--accent); }
+.stat-value.blue { color: var(--blue); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.purple { color: var(--purple); }
+
+.period-tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.period-tab { flex: 1; padding: 8px; border: none; border-radius: 8px; background: var(--surface2); color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.period-tab.active { background: var(--accent-dim); color: var(--accent); }
+.chart-container { position: relative; height: 200px; margin-bottom: 16px; }
+
+.record-item { padding: 16px; border-radius: 12px; margin-bottom: 10px; background: var(--surface2); position: relative; }
+.record-date { font-size: 12px; color: var(--text2); font-weight: 600; }
+.record-stats { display: flex; gap: 16px; margin: 8px 0; }
+.record-stat { font-size: 14px; font-weight: 600; }
+.record-stat span { color: var(--text2); font-size: 12px; font-weight: 400; }
+.record-playlist-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); background: var(--accent-dim); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.record-playlist-tag:hover { background: rgba(0,230,118,0.25); }
+.record-memo { font-size: 13px; color: var(--text2); margin-top: 6px; }
+.record-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text2); cursor: pointer; font-size: 14px; opacity: 0; transition: all 0.15s; }
+.record-item:hover .record-delete { opacity: 1; }
+.record-delete:hover { color: var(--danger); }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text2); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-text { font-size: 14px; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.modal-close { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; }
+
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); color: var(--text); padding: 14px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 200; transition: transform 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+.shuffle-btn { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; }
+.shuffle-btn:hover { color: var(--accent); background: var(--accent-dim); }
+
+/* My Playlist Tab */
+.mypl-card { background: var(--surface); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+.mypl-header { padding: 18px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
+.mypl-header:hover { background: var(--surface2); }
+.mypl-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.mypl-info p { font-size: 12px; color: var(--text2); }
+.mypl-actions { display: flex; gap: 4px; align-items: center; }
+.mypl-toggle { background: none; border: none; color: var(--text2); font-size: 16px; cursor: pointer; transition: transform 0.2s; padding: 4px; }
+.mypl-toggle.open { transform: rotate(180deg); }
+.mypl-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+.mypl-body.open { max-height: 2000px; }
+.mypl-body-inner { padding: 0 20px 16px; }
+.mypl-date { font-size: 11px; color: var(--text2); margin-bottom: 8px; }
+.mypl-empty { text-align: center; padding: 60px 20px; }
+.mypl-empty-icon { font-size: 56px; margin-bottom: 16px; }
+.mypl-empty-text { color: var(--text2); font-size: 14px; line-height: 1.6; }
+.mypl-empty .btn-generate { max-width: 280px; margin: 20px auto 0; }
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+
+@media (max-width: 400px) { .stat-value { font-size: 22px; } .theme-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>RunBeat</h1>
+  <p>나만의 러닝 플레이리스트 & 기록</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('playlist', this)"><span class="tab-icon">&#9835;</span>만들기</button>
+  <button class="tab" onclick="switchTab('mylist', this)"><span class="tab-icon">&#128218;</span>내 플리</button>
+  <button class="tab" onclick="switchTab('record', this)"><span class="tab-icon">&#9998;</span>기록</button>
+  <button class="tab" onclick="switchTab('dashboard', this)"><span class="tab-icon">&#9776;</span>대시보드</button>
+</div>
+
+<div class="content">
+
+  <!-- 플레이리스트 탭 -->
+  <div id="tab-playlist" class="tab-content active">
+
+    <div class="card">
+      <div class="card-title">테마 선택</div>
+
+      <div class="theme-section-title">기분 / 분위기</div>
+      <div class="theme-grid" id="moodThemes"></div>
+
+      <div class="theme-section-title">상황</div>
+      <div class="theme-grid" id="situationThemes"></div>
+
+      <div class="theme-section-title">페이스 (BPM)</div>
+      <div class="bpm-mini" id="bpmChips"></div>
+
+      <button class="btn-generate" onclick="generatePlaylist()">1시간 플레이리스트 만들기</button>
+    </div>
+
+    <div id="generatedPlaylist" style="display:none;">
+      <div class="card">
+        <div class="playlist-meta">
+          <h3 id="plTitle">추천 플레이리스트</h3>
+          <div class="playlist-meta-tags">
+            <span class="meta-tag time" id="plTime"></span>
+            <span class="meta-tag count" id="plCount"></span>
+          </div>
+        </div>
+        <div style="text-align:right; margin-bottom: 8px;">
+          <button class="shuffle-btn" onclick="shuffleCurrent()" title="셔플">&#128256; 셔플</button>
+        </div>
+        <div id="playlistSongs"></div>
+        <div class="save-playlist-section">
+          <input type="text" class="playlist-name-input" id="playlistNameInput" placeholder="플레이리스트 이름 (예: 한강 새벽 러닝)">
+          <button class="btn-save" onclick="savePlaylist()">저장</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="savedPlaylists"></div>
+  </div>
+
+  <!-- 내 플리 탭 -->
+  <div id="tab-mylist" class="tab-content">
+    <div id="mylistContainer"></div>
+  </div>
+
+  <!-- 기록하기 탭 -->
+  <div id="tab-record" class="tab-content">
+    <div class="card">
+      <div class="card-title">러닝 기록 남기기</div>
+      <div class="form-group">
+        <label class="form-label">날짜</label>
+        <input type="date" class="form-input" id="recordDate">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">거리 (km)</label>
+          <input type="number" class="form-input" id="recordDistance" placeholder="5.0" step="0.1" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">시간 (분)</label>
+          <input type="number" class="form-input" id="recordTime" placeholder="30" step="1" min="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">오늘의 플레이리스트</label>
+        <select class="form-select" id="recordPlaylist"><option value="">선택 안 함</option></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <textarea class="form-textarea" id="recordMemo" placeholder="오늘 러닝은 어땠나요?"></textarea>
+      </div>
+      <button class="btn-record" onclick="saveRecord()">기록 저장</button>
+    </div>
+  </div>
+
+  <!-- 대시보드 탭 -->
+  <div id="tab-dashboard" class="tab-content">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value green" id="statTotalRuns">0</div><div class="stat-label">총 러닝 횟수</div></div>
+      <div class="stat-card"><div class="stat-value blue" id="statTotalDist">0</div><div class="stat-label">총 거리 (km)</div></div>
+      <div class="stat-card"><div class="stat-value orange" id="statAvgPace">-</div><div class="stat-label">평균 페이스</div></div>
+      <div class="stat-card"><div class="stat-value purple" id="statTotalTime">0</div><div class="stat-label">총 시간 (분)</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">거리 추이</div>
+      <div class="period-tabs">
+        <button class="period-tab active" onclick="setPeriod('week', this)">이번 주</button>
+        <button class="period-tab" onclick="setPeriod('month', this)">이번 달</button>
+        <button class="period-tab" onclick="setPeriod('all', this)">전체</button>
+      </div>
+      <div class="chart-container"><canvas id="distanceChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">러닝 기록</div>
+      <div id="recordList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 모달 -->
+<div class="modal-overlay" id="playlistModal">
+  <div class="modal">
+    <div class="modal-title"><span id="modalTitle">플레이리스트</span><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div id="modalSongs"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== 테마 정의 =====================
+const MOOD_THEMES = [
+  { id: 'energy',  emoji: '&#128293;', name: '에너지 폭발',  desc: '강렬하고 신나는 곡',    color: '#ff5252', bg: 'rgba(255,82,82,0.12)' },
+  { id: 'happy',   emoji: '&#127774;', name: '긍정 바이브',   desc: '기분 좋아지는 곡',     color: '#ffd740', bg: 'rgba(255,215,64,0.12)' },
+  { id: 'chill',   emoji: '&#127754;', name: '차분한 집중',   desc: '편안하게 달리는 곡',    color: '#448aff', bg: 'rgba(68,138,255,0.12)' },
+  { id: 'emotion', emoji: '&#127769;', name: '감성 충전',    desc: '감성적이고 몽환적인 곡',  color: '#b388ff', bg: 'rgba(179,136,255,0.12)' },
+];
+
+const SITUATION_THEMES = [
+  { id: 'dawn',    emoji: '&#127749;', name: '새벽 러닝',  desc: '고요한 새벽 감성',    color: '#ff80ab', bg: 'rgba(255,128,171,0.12)' },
+  { id: 'park',    emoji: '&#127795;', name: '한강 / 공원', desc: '여유로운 야외 러닝',   color: '#69f0ae', bg: 'rgba(105,240,174,0.12)' },
+  { id: 'race',    emoji: '&#127942;', name: '레이스 모드',  desc: '한계를 넘는 전력 질주', color: '#ff9100', bg: 'rgba(255,145,0,0.12)' },
+  { id: 'night',   emoji: '&#127747;', name: '야간 러닝',   desc: '밤의 도시를 달리며',    color: '#18ffff', bg: 'rgba(24,255,255,0.12)' },
+];
+
+const BPM_OPTIONS = [
+  { id: 'walk',   label: '워킹 100-120',   min: 100, max: 120 },
+  { id: 'jog',    label: '조깅 120-140',    min: 120, max: 140 },
+  { id: 'run',    label: '러닝 140-160',    min: 140, max: 160 },
+  { id: 'fast',   label: '스프린트 160+',   min: 160, max: 200 },
+];
+
+// ===================== 곡 DB =====================
+// tags: mood(energy/happy/chill/emotion), situation(dawn/park/race/night), dur: seconds
+const SONGS = [
+  // === K-POP 에너지 ===
+  { title:"뚜두뚜두", artist:"BLACKPINK", bpm:154, dur:209, tags:["energy","race"] },
+  { title:"Pink Venom", artist:"BLACKPINK", bpm:150, dur:187, tags:["energy","night"] },
+  { title:"Shut Down", artist:"BLACKPINK", bpm:144, dur:177, tags:["energy","race"] },
+  { title:"How You Like That", artist:"BLACKPINK", bpm:130, dur:182, tags:["energy","happy"] },
+  { title:"Kill This Love", artist:"BLACKPINK", bpm:136, dur:190, tags:["energy","race"] },
+
+  { title:"God's Menu", artist:"Stray Kids", bpm:153, dur:195, tags:["energy","race"] },
+  { title:"MANIAC", artist:"Stray Kids", bpm:148, dur:177, tags:["energy","night"] },
+  { title:"S-Class", artist:"Stray Kids", bpm:152, dur:183, tags:["energy","race"] },
+  { title:"Thunderous", artist:"Stray Kids", bpm:156, dur:200, tags:["energy","race"] },
+  { title:"Back Door", artist:"Stray Kids", bpm:153, dur:198, tags:["energy","night"] },
+  { title:"MIROH", artist:"Stray Kids", bpm:155, dur:210, tags:["energy","race"] },
+
+  { title:"Next Level", artist:"aespa", bpm:150, dur:234, tags:["energy","race"] },
+  { title:"Savage", artist:"aespa", bpm:144, dur:238, tags:["energy","night"] },
+  { title:"Spicy", artist:"aespa", bpm:140, dur:196, tags:["energy","happy"] },
+  { title:"Supernova", artist:"aespa", bpm:155, dur:192, tags:["energy","race"] },
+  { title:"Armageddon", artist:"aespa", bpm:148, dur:204, tags:["energy","night"] },
+
+  { title:"WANNABE", artist:"ITZY", bpm:145, dur:191, tags:["energy","happy"] },
+  { title:"SNEAKERS", artist:"ITZY", bpm:145, dur:187, tags:["energy","happy"] },
+  { title:"마.피.아. In the morning", artist:"ITZY", bpm:137, dur:195, tags:["energy","night"] },
+  { title:"LOCO", artist:"ITZY", bpm:135, dur:182, tags:["energy","happy"] },
+  { title:"Cheshire", artist:"ITZY", bpm:140, dur:192, tags:["energy","night"] },
+
+  { title:"Fire", artist:"BTS", bpm:160, dur:204, tags:["energy","race"] },
+  { title:"Mic Drop", artist:"BTS", bpm:159, dur:237, tags:["energy","race"] },
+  { title:"달려라 방탄", artist:"BTS", bpm:162, dur:220, tags:["energy","race"] },
+  { title:"Dope", artist:"BTS", bpm:160, dur:224, tags:["energy","race"] },
+  { title:"IDOL", artist:"BTS", bpm:126, dur:222, tags:["energy","happy"] },
+  { title:"ON", artist:"BTS", bpm:106, dur:253, tags:["energy","race"] },
+  { title:"Butter", artist:"BTS", bpm:110, dur:165, tags:["happy","park"] },
+  { title:"Dynamite", artist:"BTS", bpm:114, dur:199, tags:["happy","park"] },
+  { title:"Boy With Luv", artist:"BTS ft. Halsey", bpm:129, dur:230, tags:["happy","park"] },
+  { title:"Permission to Dance", artist:"BTS", bpm:125, dur:187, tags:["happy","park"] },
+
+  { title:"VERY NICE", artist:"SEVENTEEN", bpm:156, dur:214, tags:["energy","happy"] },
+  { title:"HOT", artist:"SEVENTEEN", bpm:148, dur:189, tags:["energy","race"] },
+  { title:"Super", artist:"SEVENTEEN", bpm:155, dur:182, tags:["energy","happy"] },
+  { title:"손오공", artist:"SEVENTEEN", bpm:143, dur:196, tags:["energy","race"] },
+
+  { title:"Monster", artist:"EXO", bpm:160, dur:214, tags:["energy","night"] },
+  { title:"Love Shot", artist:"EXO", bpm:119, dur:200, tags:["chill","night"] },
+  { title:"Tempo", artist:"EXO", bpm:106, dur:231, tags:["energy","night"] },
+  { title:"Obsession", artist:"EXO", bpm:130, dur:210, tags:["energy","night"] },
+
+  // === K-POP 긍정/해피 ===
+  { title:"LOVE DIVE", artist:"IVE", bpm:130, dur:180, tags:["happy","park"] },
+  { title:"After LIKE", artist:"IVE", bpm:126, dur:176, tags:["happy","park"] },
+  { title:"Kitsch", artist:"IVE", bpm:125, dur:178, tags:["happy","park"] },
+  { title:"Baddie", artist:"IVE", bpm:140, dur:168, tags:["energy","happy"] },
+
+  { title:"Hype Boy", artist:"NewJeans", bpm:130, dur:179, tags:["happy","park"] },
+  { title:"Super Shy", artist:"NewJeans", bpm:123, dur:182, tags:["happy","park"] },
+  { title:"OMG", artist:"NewJeans", bpm:127, dur:213, tags:["happy","chill"] },
+  { title:"Ditto", artist:"NewJeans", bpm:100, dur:186, tags:["chill","dawn"] },
+  { title:"Attention", artist:"NewJeans", bpm:105, dur:181, tags:["chill","park"] },
+  { title:"ETA", artist:"NewJeans", bpm:128, dur:163, tags:["happy","park"] },
+  { title:"Cool With You", artist:"NewJeans", bpm:110, dur:175, tags:["chill","park"] },
+
+  { title:"ANTIFRAGILE", artist:"LE SSERAFIM", bpm:135, dur:183, tags:["energy","happy"] },
+  { title:"UNFORGIVEN", artist:"LE SSERAFIM", bpm:128, dur:187, tags:["energy","night"] },
+  { title:"EASY", artist:"LE SSERAFIM", bpm:143, dur:185, tags:["happy","park"] },
+  { title:"Smart", artist:"LE SSERAFIM", bpm:148, dur:176, tags:["energy","happy"] },
+  { title:"Perfect Night", artist:"LE SSERAFIM", bpm:118, dur:174, tags:["chill","night"] },
+
+  { title:"Magnetic", artist:"ILLIT", bpm:140, dur:172, tags:["happy","park"] },
+  { title:"Cheer Up", artist:"TWICE", bpm:116, dur:210, tags:["happy","park"] },
+  { title:"What is Love?", artist:"TWICE", bpm:128, dur:206, tags:["happy","park"] },
+  { title:"Feel Special", artist:"TWICE", bpm:127, dur:215, tags:["emotion","chill"] },
+  { title:"I Can't Stop Me", artist:"TWICE", bpm:125, dur:199, tags:["happy","night"] },
+  { title:"Talk that Talk", artist:"TWICE", bpm:133, dur:172, tags:["happy","park"] },
+  { title:"Set Me Free", artist:"TWICE", bpm:142, dur:186, tags:["energy","happy"] },
+  { title:"Alcohol-Free", artist:"TWICE", bpm:98, dur:196, tags:["chill","park"] },
+
+  { title:"좋은 날", artist:"IU", bpm:126, dur:225, tags:["happy","dawn"] },
+  { title:"Blueming", artist:"IU", bpm:116, dur:218, tags:["happy","park"] },
+  { title:"Celebrity", artist:"IU", bpm:117, dur:195, tags:["happy","park"] },
+  { title:"Candy", artist:"백현", bpm:127, dur:202, tags:["happy","park"] },
+
+  // === K-POP 차분/감성 ===
+  { title:"밤편지", artist:"IU", bpm:70, dur:252, tags:["emotion","dawn"] },
+  { title:"Love poem", artist:"IU", bpm:78, dur:262, tags:["emotion","dawn"] },
+  { title:"에잇", artist:"IU ft. SUGA", bpm:123, dur:169, tags:["emotion","chill"] },
+  { title:"Palette", artist:"IU ft. G-Dragon", bpm:108, dur:219, tags:["chill","park"] },
+  { title:"Through the Night", artist:"IU", bpm:65, dur:251, tags:["emotion","dawn"] },
+
+  { title:"Spring Day", artist:"BTS", bpm:107, dur:275, tags:["emotion","dawn"] },
+  { title:"Butterfly", artist:"BTS", bpm:100, dur:255, tags:["emotion","dawn"] },
+  { title:"The Truth Untold", artist:"BTS", bpm:78, dur:232, tags:["emotion","dawn"] },
+  { title:"Life Goes On", artist:"BTS", bpm:80, dur:207, tags:["chill","dawn"] },
+  { title:"Film Out", artist:"BTS", bpm:72, dur:242, tags:["emotion","dawn"] },
+
+  { title:"바라봐줄게", artist:"Red Velvet", bpm:185, dur:198, tags:["energy","happy"] },
+  { title:"Psycho", artist:"Red Velvet", bpm:128, dur:210, tags:["chill","night"] },
+  { title:"Bad Boy", artist:"Red Velvet", bpm:126, dur:211, tags:["chill","night"] },
+  { title:"Automatic", artist:"Red Velvet", bpm:100, dur:201, tags:["chill","night"] },
+
+  { title:"Eyes, Nose, Lips", artist:"TAEYANG", bpm:68, dur:244, tags:["emotion","dawn"] },
+  { title:"STILL LIFE", artist:"BIGBANG", bpm:110, dur:244, tags:["emotion","park"] },
+  { title:"우리 사랑하지 말아요", artist:"BIGBANG", bpm:82, dur:238, tags:["emotion","dawn"] },
+
+  // === 팝 에너지 ===
+  { title:"Blinding Lights", artist:"The Weeknd", bpm:171, dur:200, tags:["energy","night"] },
+  { title:"Save Your Tears", artist:"The Weeknd", bpm:118, dur:216, tags:["happy","night"] },
+  { title:"Starboy", artist:"The Weeknd", bpm:186, dur:230, tags:["energy","night"] },
+
+  { title:"Levitating", artist:"Dua Lipa", bpm:103, dur:203, tags:["happy","park"] },
+  { title:"Don't Start Now", artist:"Dua Lipa", bpm:124, dur:183, tags:["happy","night"] },
+  { title:"Physical", artist:"Dua Lipa", bpm:148, dur:194, tags:["energy","race"] },
+  { title:"New Rules", artist:"Dua Lipa", bpm:116, dur:209, tags:["happy","park"] },
+
+  { title:"Uptown Funk", artist:"Bruno Mars", bpm:115, dur:270, tags:["happy","park"] },
+  { title:"24K Magic", artist:"Bruno Mars", bpm:107, dur:226, tags:["happy","night"] },
+  { title:"Treasure", artist:"Bruno Mars", bpm:116, dur:178, tags:["happy","park"] },
+  { title:"Locked Out of Heaven", artist:"Bruno Mars", bpm:144, dur:233, tags:["energy","happy"] },
+
+  { title:"Lose Yourself", artist:"Eminem", bpm:171, dur:326, tags:["energy","race"] },
+  { title:"'Till I Collapse", artist:"Eminem", bpm:171, dur:298, tags:["energy","race"] },
+  { title:"Stronger", artist:"Kanye West", bpm:104, dur:312, tags:["energy","race"] },
+  { title:"POWER", artist:"Kanye West", bpm:152, dur:292, tags:["energy","race"] },
+
+  { title:"Anti-Hero", artist:"Taylor Swift", bpm:97, dur:200, tags:["chill","park"] },
+  { title:"Shake It Off", artist:"Taylor Swift", bpm:160, dur:219, tags:["happy","park"] },
+  { title:"Cruel Summer", artist:"Taylor Swift", bpm:170, dur:178, tags:["energy","happy"] },
+
+  { title:"Flowers", artist:"Miley Cyrus", bpm:118, dur:200, tags:["happy","park"] },
+  { title:"Kill Bill", artist:"SZA", bpm:147, dur:154, tags:["energy","night"] },
+  { title:"As It Was", artist:"Harry Styles", bpm:174, dur:167, tags:["happy","park"] },
+  { title:"Watermelon Sugar", artist:"Harry Styles", bpm:95, dur:174, tags:["chill","park"] },
+
+  { title:"Can't Stop the Feeling", artist:"Justin Timberlake", bpm:113, dur:236, tags:["happy","park"] },
+  { title:"Stay", artist:"The Kid LAROI & Justin Bieber", bpm:170, dur:141, tags:["energy","happy"] },
+  { title:"Peaches", artist:"Justin Bieber", bpm:90, dur:198, tags:["chill","park"] },
+
+  { title:"bad guy", artist:"Billie Eilish", bpm:135, dur:194, tags:["energy","night"] },
+  { title:"Lovely", artist:"Billie Eilish & Khalid", bpm:115, dur:200, tags:["emotion","dawn"] },
+  { title:"Happier Than Ever", artist:"Billie Eilish", bpm:134, dur:298, tags:["emotion","night"] },
+
+  // === 팝 감성/차분 ===
+  { title:"Someone Like You", artist:"Adele", bpm:67, dur:285, tags:["emotion","dawn"] },
+  { title:"Easy On Me", artist:"Adele", bpm:71, dur:224, tags:["emotion","dawn"] },
+  { title:"Set Fire to the Rain", artist:"Adele", bpm:108, dur:242, tags:["emotion","chill"] },
+
+  { title:"Counting Stars", artist:"OneRepublic", bpm:122, dur:257, tags:["happy","park"] },
+  { title:"Good Life", artist:"OneRepublic", bpm:95, dur:252, tags:["happy","park"] },
+
+  { title:"Heat Waves", artist:"Glass Animals", bpm:81, dur:239, tags:["chill","night"] },
+  { title:"Savage Love", artist:"Jawsh 685 & Jason Derulo", bpm:150, dur:171, tags:["happy","night"] },
+  { title:"Deja Vu", artist:"Olivia Rodrigo", bpm:140, dur:215, tags:["emotion","chill"] },
+  { title:"drivers license", artist:"Olivia Rodrigo", bpm:72, dur:243, tags:["emotion","dawn"] },
+  { title:"good 4 u", artist:"Olivia Rodrigo", bpm:166, dur:178, tags:["energy","race"] },
+
+  // === 록/인디 에너지 ===
+  { title:"Believer", artist:"Imagine Dragons", bpm:125, dur:204, tags:["energy","race"] },
+  { title:"Thunder", artist:"Imagine Dragons", bpm:168, dur:187, tags:["energy","happy"] },
+  { title:"Warriors", artist:"Imagine Dragons", bpm:159, dur:170, tags:["energy","race"] },
+  { title:"Whatever It Takes", artist:"Imagine Dragons", bpm:136, dur:201, tags:["energy","race"] },
+  { title:"Bones", artist:"Imagine Dragons", bpm:141, dur:166, tags:["energy","happy"] },
+  { title:"Radioactive", artist:"Imagine Dragons", bpm:137, dur:187, tags:["energy","night"] },
+  { title:"Natural", artist:"Imagine Dragons", bpm:91, dur:190, tags:["energy","race"] },
+  { title:"Demons", artist:"Imagine Dragons", bpm:89, dur:177, tags:["emotion","dawn"] },
+  { title:"On Top of the World", artist:"Imagine Dragons", bpm:101, dur:193, tags:["happy","park"] },
+
+  { title:"Centuries", artist:"Fall Out Boy", bpm:174, dur:224, tags:["energy","race"] },
+  { title:"Eye of the Tiger", artist:"Survivor", bpm:109, dur:245, tags:["energy","race"] },
+  { title:"Thunderstruck", artist:"AC/DC", bpm:134, dur:292, tags:["energy","race"] },
+  { title:"We Will Rock You", artist:"Queen", bpm:81, dur:122, tags:["energy","race"] },
+  { title:"Don't Stop Me Now", artist:"Queen", bpm:156, dur:209, tags:["energy","happy"] },
+  { title:"Bohemian Rhapsody", artist:"Queen", bpm:143, dur:354, tags:["emotion","chill"] },
+
+  { title:"Run the World", artist:"Beyoncé", bpm:127, dur:236, tags:["energy","race"] },
+  { title:"Crazy in Love", artist:"Beyoncé", bpm:100, dur:236, tags:["energy","happy"] },
+
+  // === EDM / 일렉 ===
+  { title:"Wake Me Up", artist:"Avicii", bpm:124, dur:249, tags:["happy","park"] },
+  { title:"The Nights", artist:"Avicii", bpm:126, dur:176, tags:["happy","park"] },
+  { title:"Levels", artist:"Avicii", bpm:126, dur:203, tags:["energy","happy"] },
+  { title:"Waiting for Love", artist:"Avicii", bpm:128, dur:230, tags:["happy","park"] },
+
+  { title:"Titanium", artist:"David Guetta ft. Sia", bpm:126, dur:245, tags:["energy","race"] },
+  { title:"Don't You Worry Child", artist:"Swedish House Mafia", bpm:129, dur:213, tags:["emotion","park"] },
+  { title:"Clarity", artist:"Zedd", bpm:128, dur:271, tags:["emotion","night"] },
+  { title:"Animals", artist:"Martin Garrix", bpm:128, dur:191, tags:["energy","night"] },
+  { title:"Alone", artist:"Marshmello", bpm:128, dur:218, tags:["chill","night"] },
+  { title:"Faded", artist:"Alan Walker", bpm:90, dur:212, tags:["emotion","dawn"] },
+  { title:"Darkside", artist:"Alan Walker", bpm:84, dur:213, tags:["emotion","night"] },
+  { title:"Roses", artist:"SAINt JHN (Imanbek Remix)", bpm:121, dur:177, tags:["happy","night"] },
+
+  { title:"Lean On", artist:"Major Lazer & DJ Snake", bpm:98, dur:176, tags:["chill","park"] },
+  { title:"Turn Down for What", artist:"DJ Snake & Lil Jon", bpm:100, dur:213, tags:["energy","night"] },
+  { title:"Bangarang", artist:"Skrillex", bpm:110, dur:215, tags:["energy","night"] },
+
+  { title:"Pump It", artist:"Black Eyed Peas", bpm:154, dur:213, tags:["energy","race"] },
+  { title:"Boom Boom Pow", artist:"Black Eyed Peas", bpm:130, dur:220, tags:["energy","night"] },
+  { title:"I Gotta Feeling", artist:"Black Eyed Peas", bpm:128, dur:289, tags:["happy","park"] },
+
+  { title:"Beggin'", artist:"Måneskin", bpm:134, dur:211, tags:["energy","happy"] },
+  { title:"Gangnam Style", artist:"PSY", bpm:132, dur:219, tags:["happy","park"] },
+  { title:"That That", artist:"PSY ft. SUGA", bpm:120, dur:207, tags:["happy","park"] },
+
+  // === 차분/러닝 힐링 ===
+  { title:"Dandelions", artist:"Ruth B.", bpm:104, dur:238, tags:["chill","dawn"] },
+  { title:"Here With Me", artist:"d4vd", bpm:132, dur:237, tags:["chill","dawn"] },
+  { title:"Die For You", artist:"The Weeknd", bpm:100, dur:260, tags:["emotion","night"] },
+  { title:"Glimpse of Us", artist:"Joji", bpm:84, dur:234, tags:["emotion","dawn"] },
+  { title:"Let Her Go", artist:"Passenger", bpm:75, dur:253, tags:["emotion","dawn"] },
+  { title:"A Thousand Years", artist:"Christina Perri", bpm:93, dur:275, tags:["emotion","dawn"] },
+  { title:"Perfect", artist:"Ed Sheeran", bpm:95, dur:263, tags:["emotion","dawn"] },
+  { title:"Shape of You", artist:"Ed Sheeran", bpm:96, dur:234, tags:["happy","park"] },
+  { title:"Photograph", artist:"Ed Sheeran", bpm:108, dur:258, tags:["emotion","park"] },
+
+  { title:"Unstoppable", artist:"Sia", bpm:150, dur:218, tags:["energy","race"] },
+  { title:"Cheap Thrills", artist:"Sia", bpm:90, dur:212, tags:["happy","park"] },
+  { title:"Chandelier", artist:"Sia", bpm:87, dur:217, tags:["emotion","night"] },
+];
+
+// ===================== 상태 =====================
+let selectedMood = null;
+let selectedSituation = null;
+let selectedBpm = null;
+let currentPlaylist = [];
+let currentPeriod = 'week';
+let distanceChart = null;
+
+// ===================== 로컬스토리지 =====================
+const getPlaylists = () => JSON.parse(localStorage.getItem('rb_playlists') || '[]');
+const savePlaylists = d => localStorage.setItem('rb_playlists', JSON.stringify(d));
+const getRecords = () => JSON.parse(localStorage.getItem('rb_records') || '[]');
+const saveRecords = d => localStorage.setItem('rb_records', JSON.stringify(d));
+
+// ===================== 테마 UI 렌더 =====================
+function renderThemes() {
+  const moodEl = document.getElementById('moodThemes');
+  moodEl.innerHTML = MOOD_THEMES.map(t => `
+    <div class="theme-card ${selectedMood === t.id ? 'selected' : ''}" style="background:${t.bg}" onclick="selectMood('${t.id}')">
+      <div class="theme-emoji">${t.emoji}</div>
+      <div class="theme-name" style="color:${t.color}">${t.name}</div>
+      <div class="theme-desc">${t.desc}</div>
+    </div>
+  `).join('');
+
+  const sitEl = document.getElementById('situationThemes');
+  sitEl.innerHTML = SITUATION_THEMES.map(t => `
+    <div class="theme-card ${selectedSituation === t.id ? 'selected' : ''}" style="background:${t.bg}" onclick="selectSituation('${t.id}')">
+      <div class="theme-emoji">${t.emoji}</div>
+      <div class="theme-name" style="color:${t.color}">${t.name}</div>
+      <div class="theme-desc">${t.desc}</div>
+    </div>
+  `).join('');
+
+  const bpmEl = document.getElementById('bpmChips');
+  bpmEl.innerHTML = BPM_OPTIONS.map(b => `
+    <button class="bpm-chip ${selectedBpm === b.id ? 'selected' : ''}" onclick="selectBpm('${b.id}')">${b.label}</button>
+  `).join('');
+}
+
+function selectMood(id) { selectedMood = selectedMood === id ? null : id; renderThemes(); }
+function selectSituation(id) { selectedSituation = selectedSituation === id ? null : id; renderThemes(); }
+function selectBpm(id) { selectedBpm = selectedBpm === id ? null : id; renderThemes(); }
+
+// ===================== 플레이리스트 생성 =====================
+function generatePlaylist() {
+  let pool = [...SONGS];
+
+  // 테마 필터: 점수 기반 매칭
+  pool = pool.map(song => {
+    let score = 0;
+    if (selectedMood && song.tags.includes(selectedMood)) score += 3;
+    if (selectedSituation && song.tags.includes(selectedSituation)) score += 3;
+    if (selectedBpm) {
+      const bp = BPM_OPTIONS.find(b => b.id === selectedBpm);
+      if (bp && song.bpm >= bp.min && song.bpm <= bp.max) score += 2;
+      else if (bp && Math.abs(song.bpm - (bp.min + bp.max) / 2) <= 30) score += 1;
+    }
+    // 아무 테마도 선택 안 하면 전체에서 랜덤
+    if (!selectedMood && !selectedSituation && !selectedBpm) score = 1;
+    return { ...song, score };
+  }).filter(s => s.score > 0);
+
+  // 점수 높은 순 정렬 후 같은 점수 내에서 셔플
+  pool.sort((a, b) => b.score - a.score || Math.random() - 0.5);
+
+  if (pool.length === 0) {
+    showToast('조건에 맞는 곡이 없어요. 테마를 변경해보세요.');
+    return;
+  }
+
+  // 60분(3600초) 목표로 곡 채우기
+  const TARGET = 3600;
+  const TOLERANCE = 300; // +-5분 허용
+  let selected = [];
+  let totalDur = 0;
+
+  // 같은 아티스트 연속 방지를 위해 추적
+  for (const song of pool) {
+    if (totalDur >= TARGET + TOLERANCE) break;
+    // 이미 추가된 곡 중복 방지
+    if (selected.find(s => s.title === song.title && s.artist === song.artist)) continue;
+    selected.push(song);
+    totalDur += song.dur;
+  }
+
+  // 부족하면 나머지에서도 채우기
+  if (totalDur < TARGET - TOLERANCE) {
+    const remaining = SONGS.filter(s => !selected.find(x => x.title === s.title && x.artist === s.artist));
+    const shuffled = remaining.sort(() => Math.random() - 0.5);
+    for (const song of shuffled) {
+      if (totalDur >= TARGET + TOLERANCE) break;
+      selected.push(song);
+      totalDur += song.dur;
+    }
+  }
+
+  currentPlaylist = selected;
+  renderGeneratedPlaylist();
+}
+
+function shuffleCurrent() {
+  currentPlaylist.sort(() => Math.random() - 0.5);
+  renderGeneratedPlaylist();
+}
+
+function renderGeneratedPlaylist() {
+  const container = document.getElementById('generatedPlaylist');
+  container.style.display = 'block';
+
+  const totalDur = currentPlaylist.reduce((s, c) => s + c.dur, 0);
+  const avgBpm = Math.round(currentPlaylist.reduce((s, c) => s + c.bpm, 0) / currentPlaylist.length);
+
+  // 테마 이름 조합
+  let titleParts = [];
+  if (selectedMood) titleParts.push(MOOD_THEMES.find(t => t.id === selectedMood)?.name);
+  if (selectedSituation) titleParts.push(SITUATION_THEMES.find(t => t.id === selectedSituation)?.name);
+  document.getElementById('plTitle').textContent = titleParts.length > 0 ? titleParts.join(' + ') : '추천 플레이리스트';
+
+  document.getElementById('plTime').textContent = formatDuration(totalDur);
+  document.getElementById('plCount').textContent = `${currentPlaylist.length}곡 · 평균 ${avgBpm} BPM`;
+
+  document.getElementById('playlistSongs').innerHTML = currentPlaylist.map((song, i) => `
+    <div class="song-item">
+      <span class="song-num">${i + 1}</span>
+      <div class="song-info">
+        <div class="song-title">${song.title}</div>
+        <div class="song-artist">${song.artist}</div>
+      </div>
+      <span class="song-dur">${formatDuration(song.dur)}</span>
+      <span class="song-bpm">${song.bpm}</span>
+      <button class="song-remove" onclick="removeSong(${i})" title="제거">&times;</button>
+    </div>
+  `).join('');
+
+  // 자동 이름 제안
+  const nameInput = document.getElementById('playlistNameInput');
+  if (!nameInput.value) {
+    const today = new Date();
+    const prefix = titleParts.length > 0 ? titleParts[0] : '러닝';
+    nameInput.value = `${prefix} ${today.getMonth() + 1}.${today.getDate()}`;
+  }
+
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function removeSong(i) {
+  currentPlaylist.splice(i, 1);
+  if (currentPlaylist.length === 0) {
+    document.getElementById('generatedPlaylist').style.display = 'none';
+  } else {
+    renderGeneratedPlaylist();
+  }
+}
+
+// ===================== 저장/불러오기 =====================
+function savePlaylist() {
+  const name = document.getElementById('playlistNameInput').value.trim();
+  if (!name) { showToast('플레이리스트 이름을 입력해주세요'); return; }
+  if (currentPlaylist.length === 0) { showToast('곡이 없습니다'); return; }
+
+  const totalDur = currentPlaylist.reduce((s, c) => s + c.dur, 0);
+  const avgBpm = Math.round(currentPlaylist.reduce((s, c) => s + c.bpm, 0) / currentPlaylist.length);
+  const playlists = getPlaylists();
+  playlists.unshift({
+    id: Date.now(), name, avgBpm, totalDur,
+    songs: currentPlaylist.map(s => ({ title: s.title, artist: s.artist, bpm: s.bpm, dur: s.dur })),
+    createdAt: new Date().toISOString()
+  });
+  savePlaylists(playlists);
+  document.getElementById('playlistNameInput').value = '';
+  showToast('저장 완료!');
+  renderSavedPlaylists();
+  loadPlaylistSelect();
+}
+
+function renderSavedPlaylists() {
+  const playlists = getPlaylists();
+  const container = document.getElementById('savedPlaylists');
+  if (playlists.length === 0) { container.innerHTML = ''; return; }
+
+  container.innerHTML = `
+    <div class="card">
+      <div class="card-title">저장된 플레이리스트</div>
+      ${playlists.map(pl => `
+        <div class="saved-playlist-item" onclick="openPlaylistModal(${pl.id})">
+          <div class="saved-pl-info">
+            <h4>${pl.name}</h4>
+            <p>${pl.songs.length}곡 · ${formatDuration(pl.totalDur || 0)} · 평균 ${pl.avgBpm || '?'} BPM</p>
+          </div>
+          <div class="saved-pl-actions">
+            <button class="btn-icon delete" onclick="event.stopPropagation(); deletePlaylist(${pl.id})" title="삭제">&#128465;</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function deletePlaylist(id) {
+  savePlaylists(getPlaylists().filter(p => p.id !== id));
+  renderSavedPlaylists();
+  showToast('삭제됨');
+}
+
+// ===================== 모달 =====================
+function openPlaylistModal(id) {
+  const pl = getPlaylists().find(p => p.id === id);
+  if (!pl) return;
+  document.getElementById('modalTitle').textContent = pl.name;
+  document.getElementById('modalSongs').innerHTML = pl.songs.map((s, i) => `
+    <div class="song-item">
+      <span class="song-num">${i + 1}</span>
+      <div class="song-info"><div class="song-title">${s.title}</div><div class="song-artist">${s.artist}</div></div>
+      <span class="song-dur">${formatDuration(s.dur || 0)}</span>
+      <span class="song-bpm">${s.bpm}</span>
+    </div>
+  `).join('');
+  document.getElementById('playlistModal').classList.add('show');
+}
+
+function showRecordPlaylist(recordId) {
+  const r = getRecords().find(r => r.id === recordId);
+  if (!r || !r.playlist) return;
+  document.getElementById('modalTitle').textContent = r.playlist.name;
+  document.getElementById('modalSongs').innerHTML = r.playlist.songs.map((s, i) => `
+    <div class="song-item">
+      <span class="song-num">${i + 1}</span>
+      <div class="song-info"><div class="song-title">${s.title}</div><div class="song-artist">${s.artist}</div></div>
+      <span class="song-dur">${formatDuration(s.dur || 0)}</span>
+      <span class="song-bpm">${s.bpm}</span>
+    </div>
+  `).join('');
+  document.getElementById('playlistModal').classList.add('show');
+}
+
+function closeModal() { document.getElementById('playlistModal').classList.remove('show'); }
+document.getElementById('playlistModal').addEventListener('click', e => { if (e.target.classList.contains('modal-overlay')) closeModal(); });
+
+// ===================== 탭 =====================
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'mylist') renderMyList();
+  if (name === 'record') loadPlaylistSelect();
+  if (name === 'dashboard') updateDashboard();
+}
+
+// ===================== 내 플리 =====================
+function renderMyList() {
+  const playlists = getPlaylists();
+  const container = document.getElementById('mylistContainer');
+
+  if (playlists.length === 0) {
+    container.innerHTML = `
+      <div class="mypl-empty">
+        <div class="mypl-empty-icon">&#127925;</div>
+        <div class="mypl-empty-text">저장된 플레이리스트가 없어요<br>먼저 플레이리스트를 만들어보세요!</div>
+        <button class="btn-generate" onclick="switchTab('playlist', document.querySelector('.tab'))">만들러 가기</button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = playlists.map(pl => `
+    <div class="mypl-card" id="mypl-${pl.id}">
+      <div class="mypl-header" onclick="toggleMyPl(${pl.id})">
+        <div class="mypl-info">
+          <h3>${pl.name}</h3>
+          <p>${pl.songs.length}곡 · ${formatDuration(pl.totalDur || 0)} · 평균 ${pl.avgBpm || '?'} BPM</p>
+        </div>
+        <div class="mypl-actions">
+          <button class="btn-icon delete" onclick="event.stopPropagation(); deleteMyPl(${pl.id})" title="삭제">&#128465;</button>
+          <span class="mypl-toggle" id="toggle-${pl.id}">&#9660;</span>
+        </div>
+      </div>
+      <div class="mypl-body" id="body-${pl.id}">
+        <div class="mypl-body-inner">
+          <div class="mypl-date">만든 날: ${formatDateKr(pl.createdAt)}</div>
+          ${pl.songs.map((s, i) => `
+            <div class="song-item">
+              <span class="song-num">${i + 1}</span>
+              <div class="song-info">
+                <div class="song-title">${s.title}</div>
+                <div class="song-artist">${s.artist}</div>
+              </div>
+              <span class="song-dur">${formatDuration(s.dur || 0)}</span>
+              <span class="song-bpm">${s.bpm}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleMyPl(id) {
+  const body = document.getElementById('body-' + id);
+  const toggle = document.getElementById('toggle-' + id);
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+function deleteMyPl(id) {
+  savePlaylists(getPlaylists().filter(p => p.id !== id));
+  renderMyList();
+  renderSavedPlaylists();
+  loadPlaylistSelect();
+  showToast('삭제됨');
+}
+
+// ===================== 기록 =====================
+function loadPlaylistSelect() {
+  const select = document.getElementById('recordPlaylist');
+  const pls = getPlaylists();
+  select.innerHTML = '<option value="">선택 안 함</option>' + pls.map(p => `<option value="${p.id}">${p.name} (${p.songs.length}곡)</option>`).join('');
+}
+
+function saveRecord() {
+  const date = document.getElementById('recordDate').value;
+  const distance = parseFloat(document.getElementById('recordDistance').value);
+  const time = parseInt(document.getElementById('recordTime').value);
+  const plId = document.getElementById('recordPlaylist').value;
+  const memo = document.getElementById('recordMemo').value.trim();
+
+  if (!date) { showToast('날짜를 선택해주세요'); return; }
+  if (!distance || distance <= 0) { showToast('거리를 입력해주세요'); return; }
+  if (!time || time <= 0) { showToast('시간을 입력해주세요'); return; }
+
+  let playlistInfo = null;
+  if (plId) {
+    const pl = getPlaylists().find(p => p.id === parseInt(plId));
+    if (pl) playlistInfo = { id: pl.id, name: pl.name, songs: pl.songs };
+  }
+
+  const records = getRecords();
+  records.unshift({ id: Date.now(), date, distance, time, pace: time / distance, playlist: playlistInfo, memo });
+  saveRecords(records);
+
+  document.getElementById('recordDistance').value = '';
+  document.getElementById('recordTime').value = '';
+  document.getElementById('recordPlaylist').value = '';
+  document.getElementById('recordMemo').value = '';
+  showToast('러닝 기록 저장 완료!');
+}
+
+// ===================== 대시보드 =====================
+function updateDashboard() {
+  const records = getRecords();
+  const totalDist = records.reduce((s, r) => s + r.distance, 0);
+  const totalTime = records.reduce((s, r) => s + r.time, 0);
+  const avgPace = totalDist > 0 ? totalTime / totalDist : 0;
+
+  document.getElementById('statTotalRuns').textContent = records.length;
+  document.getElementById('statTotalDist').textContent = totalDist.toFixed(1);
+  document.getElementById('statTotalTime').textContent = totalTime;
+  document.getElementById('statAvgPace').textContent = avgPace > 0 ? formatPace(avgPace) : '-';
+
+  updateChart();
+  renderRecordList();
+}
+
+function setPeriod(p, btn) {
+  currentPeriod = p;
+  document.querySelectorAll('.period-tab').forEach(el => el.classList.remove('active'));
+  btn.classList.add('active');
+  updateChart();
+}
+
+function updateChart() {
+  const records = getRecords();
+  const now = new Date();
+  let labels, data;
+
+  if (currentPeriod === 'week') {
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay()); weekStart.setHours(0,0,0,0);
+    labels = ['일','월','화','수','목','금','토'];
+    data = new Array(7).fill(0);
+    records.forEach(r => { const d = new Date(r.date); if (d >= weekStart) data[d.getDay()] += r.distance; });
+  } else if (currentPeriod === 'month') {
+    const dim = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+    labels = []; data = [];
+    for (let i = 1; i <= dim; i += 3) {
+      const end = Math.min(i+2, dim);
+      labels.push(`${i}-${end}`);
+      data.push(records.filter(r => { const d = new Date(r.date); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth() && d.getDate()>=i && d.getDate()<=end; }).reduce((s,r) => s+r.distance, 0));
+    }
+  } else {
+    const mm = {};
+    records.forEach(r => { const d = new Date(r.date); const k = `${d.getFullYear()}.${d.getMonth()+1}`; mm[k] = (mm[k]||0) + r.distance; });
+    const sorted = Object.entries(mm).sort((a,b) => a[0].localeCompare(b[0]));
+    labels = sorted.map(e => e[0]); data = sorted.map(e => e[1]);
+    if (!labels.length) { labels = [`${now.getFullYear()}.${now.getMonth()+1}`]; data = [0]; }
+  }
+
+  const ctx = document.getElementById('distanceChart').getContext('2d');
+  if (distanceChart) distanceChart.destroy();
+  distanceChart = new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: 'rgba(0,230,118,0.3)', borderColor: 'rgba(0,230,118,0.8)', borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.y.toFixed(1)} km` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9a9ab0', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9a9ab0', font: { size: 11 }, callback: v => v+' km' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderRecordList() {
+  const records = getRecords();
+  const container = document.getElementById('recordList');
+  if (!records.length) { container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#127939;</div><div class="empty-text">아직 기록이 없어요<br>첫 러닝을 기록해보세요!</div></div>'; return; }
+
+  container.innerHTML = records.map(r => `
+    <div class="record-item">
+      <button class="record-delete" onclick="deleteRecord(${r.id})">&times;</button>
+      <div class="record-date">${formatDateKr(r.date)}</div>
+      <div class="record-stats">
+        <div class="record-stat">${r.distance} km <span>거리</span></div>
+        <div class="record-stat">${r.time}분 <span>시간</span></div>
+        <div class="record-stat">${formatPace(r.pace)} <span>페이스</span></div>
+      </div>
+      ${r.playlist ? `<span class="record-playlist-tag" onclick="showRecordPlaylist(${r.id})">&#9835; ${r.playlist.name}</span>` : ''}
+      ${r.memo ? `<div class="record-memo">${r.memo}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function deleteRecord(id) {
+  saveRecords(getRecords().filter(r => r.id !== id));
+  updateDashboard();
+  showToast('삭제됨');
+}
+
+// ===================== 유틸 =====================
+function formatPace(p) { const m = Math.floor(p); return `${m}'${Math.round((p-m)*60).toString().padStart(2,'0')}"`; }
+function formatDuration(sec) { const m = Math.floor(sec/60); const s = sec % 60; return s ? `${m}분 ${s}초` : `${m}분`; }
+function formatDateKr(ds) { const d = new Date(ds); const days = ['일','월','화','수','목','금','토']; return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. (${days[d.getDay()]})`; }
+function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+
+// ===================== 초기화 =====================
+document.getElementById('recordDate').valueAsDate = new Date();
+renderThemes();
+renderSavedPlaylists();
+loadPlaylistSelect();
+</script>
+</body>
+</html>
