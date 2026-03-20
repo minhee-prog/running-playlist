@@ -7,81 +7,112 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ====== 테마: 미드나잇 러너 (기본) ====== */
 :root, [data-theme="midnight"] {
-  --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f;
-  --accent: #00e676; --accent2: #00c853; --accent-dim: rgba(0,230,118,0.15);
-  --text: #eaeaea; --text2: #9a9ab0;
-  --danger: #ff5252; --orange: #ff9100; --blue: #448aff; --purple: #b388ff;
-  --pink: #ff80ab; --yellow: #ffd740; --cyan: #18ffff;
-  --radius: 14px; --grad1: var(--accent); --grad2: var(--blue);
-  --chart-bar: rgba(0,230,118,0.3); --chart-border: rgba(0,230,118,0.8);
+  --bg: #0c0c10; --surface: #18182a; --surface2: #232340;
+  --accent: #7c5cff; --accent2: #6344e0; --accent-dim: rgba(124,92,255,0.14);
+  --text: #e8e6f0; --text2: #8b87a8;
+  --danger: #ff5252; --orange: #ff9100; --blue: #5c8aff; --purple: #b07cff;
+  --pink: #ff80ab; --yellow: #ffd740; --cyan: #4dd9e8;
+  --radius: 16px;
+  --grad1: #7c5cff; --grad2: #4dd9e8;
+  --grad-btn: linear-gradient(135deg, #7c5cff, #4dd9e8);
+  --grad-record: linear-gradient(135deg, #5c8aff, #b07cff);
+  --chart-bar: rgba(124,92,255,0.35); --chart-border: rgba(124,92,255,0.9);
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --card-border: 1px solid rgba(124,92,255,0.08);
 }
+/* ====== 테마: 네온 시티 ====== */
 [data-theme="neon"] {
-  --bg: #0a0a14; --surface: #12122a; --surface2: #1c1c3a;
-  --accent: #ff00ff; --accent2: #cc00cc; --accent-dim: rgba(255,0,255,0.12);
-  --text: #f0e6ff; --text2: #8a7aaa;
-  --danger: #ff3366; --orange: #ff6600; --blue: #00ccff; --purple: #aa66ff;
-  --pink: #ff66aa; --yellow: #ffcc00; --cyan: #00ffcc;
-  --grad1: #ff00ff; --grad2: #00ccff;
-  --chart-bar: rgba(255,0,255,0.3); --chart-border: rgba(255,0,255,0.8);
+  --bg: #05050f; --surface: #0e0e22; --surface2: #161638;
+  --accent: #ff2d95; --accent2: #e0207a; --accent-dim: rgba(255,45,149,0.14);
+  --text: #f2eaff; --text2: #7a6e9a;
+  --danger: #ff3366; --orange: #ff7b00; --blue: #00d4ff; --purple: #c840ff;
+  --pink: #ff2d95; --yellow: #ffe14d; --cyan: #00ffc8;
+  --grad1: #ff2d95; --grad2: #00d4ff;
+  --grad-btn: linear-gradient(135deg, #ff2d95, #c840ff, #00d4ff);
+  --grad-record: linear-gradient(135deg, #00d4ff, #c840ff);
+  --chart-bar: rgba(255,45,149,0.35); --chart-border: rgba(255,45,149,0.9);
+  --shadow: 0 4px 30px rgba(255,45,149,0.15);
+  --card-border: 1px solid rgba(255,45,149,0.1);
 }
+/* ====== 테마: 선셋 바이브 ====== */
 [data-theme="sunset"] {
-  --bg: #1a1015; --surface: #261a20; --surface2: #33222a;
-  --accent: #ff6b6b; --accent2: #ee5a5a; --accent-dim: rgba(255,107,107,0.15);
-  --text: #fce4e4; --text2: #b08a8a;
-  --danger: #ff4444; --orange: #ff8844; --blue: #ffaa44; --purple: #ff7788;
-  --pink: #ff6699; --yellow: #ffcc66; --cyan: #ffaa88;
-  --grad1: #ff6b6b; --grad2: #ffa07a;
-  --chart-bar: rgba(255,107,107,0.3); --chart-border: rgba(255,107,107,0.8);
+  --bg: #faf6f1; --surface: #fff8f2; --surface2: #f0e6da;
+  --accent: #e85d3a; --accent2: #d04a28; --accent-dim: rgba(232,93,58,0.1);
+  --text: #2e2118; --text2: #8a7668;
+  --danger: #d94040; --orange: #e87830; --blue: #d08840; --purple: #c07050;
+  --pink: #e06070; --yellow: #d8a040; --cyan: #c89060;
+  --grad1: #e85d3a; --grad2: #f0a050;
+  --grad-btn: linear-gradient(135deg, #e85d3a, #f0a050, #f7c858);
+  --grad-record: linear-gradient(135deg, #d08840, #e06070);
+  --chart-bar: rgba(232,93,58,0.3); --chart-border: rgba(232,93,58,0.85);
+  --shadow: 0 2px 16px rgba(180,120,60,0.1);
+  --card-border: 1px solid rgba(232,93,58,0.08);
 }
-[data-theme="ocean"] {
-  --bg: #0a1628; --surface: #112240; --surface2: #1a3050;
-  --accent: #64ffda; --accent2: #4ad4b0; --accent-dim: rgba(100,255,218,0.12);
-  --text: #ccd6f6; --text2: #7a8ab5;
-  --danger: #ff5370; --orange: #f78c6c; --blue: #82aaff; --purple: #c792ea;
-  --pink: #ff80ab; --yellow: #ffcb6b; --cyan: #80cbc4;
-  --grad1: #64ffda; --grad2: #82aaff;
-  --chart-bar: rgba(100,255,218,0.3); --chart-border: rgba(100,255,218,0.8);
+/* ====== 테마: 포레스트 ====== */
+[data-theme="forest"] {
+  --bg: #f4f7f3; --surface: #ffffff; --surface2: #e4ede2;
+  --accent: #2e8b57; --accent2: #247048; --accent-dim: rgba(46,139,87,0.1);
+  --text: #1a2e1a; --text2: #5e7a5e;
+  --danger: #cc4444; --orange: #c08030; --blue: #4a8a5a; --purple: #6a8a70;
+  --pink: #c06a7a; --yellow: #a09030; --cyan: #3a8a7a;
+  --grad1: #2e8b57; --grad2: #70b87a;
+  --grad-btn: linear-gradient(135deg, #2e8b57, #70b87a, #a8d8a0);
+  --grad-record: linear-gradient(135deg, #4a8a5a, #2e8b57);
+  --chart-bar: rgba(46,139,87,0.3); --chart-border: rgba(46,139,87,0.85);
+  --shadow: 0 2px 16px rgba(46,100,60,0.08);
+  --card-border: 1px solid rgba(46,139,87,0.1);
 }
+/* ====== 테마: 체리 블라썸 ====== */
 [data-theme="cherry"] {
-  --bg: #180c14; --surface: #2a1525; --surface2: #3a1f33;
-  --accent: #ff4d8a; --accent2: #e63d7a; --accent-dim: rgba(255,77,138,0.15);
-  --text: #ffe0ee; --text2: #aa7a90;
-  --danger: #ff3355; --orange: #ff7744; --blue: #ff80ab; --purple: #e080ff;
-  --pink: #ff4d8a; --yellow: #ffaa66; --cyan: #ff88cc;
-  --grad1: #ff4d8a; --grad2: #ff80ab;
-  --chart-bar: rgba(255,77,138,0.3); --chart-border: rgba(255,77,138,0.8);
+  --bg: #fef5f8; --surface: #fff0f5; --surface2: #f5dce5;
+  --accent: #e84393; --accent2: #d63384; --accent-dim: rgba(232,67,147,0.1);
+  --text: #3a1a2a; --text2: #9a7080;
+  --danger: #e03060; --orange: #e88060; --blue: #c06aaa; --purple: #b060c0;
+  --pink: #e84393; --yellow: #d0a060; --cyan: #c080b0;
+  --grad1: #e84393; --grad2: #fd79a8;
+  --grad-btn: linear-gradient(135deg, #e84393, #fd79a8, #fab1c8);
+  --grad-record: linear-gradient(135deg, #b060c0, #e84393);
+  --chart-bar: rgba(232,67,147,0.3); --chart-border: rgba(232,67,147,0.85);
+  --shadow: 0 2px 16px rgba(232,67,147,0.08);
+  --card-border: 1px solid rgba(232,67,147,0.1);
 }
-[data-theme="light"] {
-  --bg: #f5f5f7; --surface: #ffffff; --surface2: #e8e8ee;
-  --accent: #5856d6; --accent2: #4745b5; --accent-dim: rgba(88,86,214,0.1);
-  --text: #1d1d1f; --text2: #6e6e73;
-  --danger: #ff3b30; --orange: #ff9500; --blue: #007aff; --purple: #af52de;
-  --pink: #ff2d55; --yellow: #ffcc00; --cyan: #32ade6;
-  --grad1: #5856d6; --grad2: #007aff;
-  --chart-bar: rgba(88,86,214,0.3); --chart-border: rgba(88,86,214,0.8);
+/* ====== 테마: 오션 딥 ====== */
+[data-theme="ocean"] {
+  --bg: #060d18; --surface: #0d1b30; --surface2: #142844;
+  --accent: #00bcd4; --accent2: #0097a7; --accent-dim: rgba(0,188,212,0.12);
+  --text: #d0e8f0; --text2: #6a8a9a;
+  --danger: #ff5370; --orange: #f09060; --blue: #4fc3f7; --purple: #80a0d0;
+  --pink: #f06090; --yellow: #f0c060; --cyan: #00bcd4;
+  --grad1: #00bcd4; --grad2: #4fc3f7;
+  --grad-btn: linear-gradient(135deg, #006070, #00bcd4, #4fc3f7);
+  --grad-record: linear-gradient(135deg, #4fc3f7, #80a0d0);
+  --chart-bar: rgba(0,188,212,0.35); --chart-border: rgba(0,188,212,0.9);
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --card-border: 1px solid rgba(0,188,212,0.1);
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.4s, color 0.4s; }
 
 .header { text-align: center; padding: 32px 20px 16px; position: relative; }
 .header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--grad1), var(--grad2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
-.theme-btn { position: absolute; right: 20px; top: 36px; background: var(--surface); border: none; color: var(--text2); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-.theme-btn:hover { background: var(--surface2); color: var(--text); }
+.theme-btn { position: absolute; right: 20px; top: 36px; background: var(--surface); border: var(--card-border); color: var(--text2); width: 38px; height: 38px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); }
+.theme-btn:hover { background: var(--surface2); color: var(--text); transform: rotate(20deg); }
 
-.theme-picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px; }
+.theme-picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px; }
 .theme-picker-overlay.show { display: flex; }
-.theme-picker { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 360px; }
-.theme-picker h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; }
-.theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.theme-picker { background: var(--surface); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 380px; box-shadow: var(--shadow); border: var(--card-border); }
+.theme-picker h3 { font-size: 17px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+.theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .theme-opt {
-  padding: 14px 8px; border-radius: 12px; border: 2px solid transparent;
-  cursor: pointer; text-align: center; transition: all 0.2s;
+  padding: 16px 8px; border-radius: 14px; border: 2px solid transparent;
+  cursor: pointer; text-align: center; transition: all 0.25s; background: var(--surface2);
 }
-.theme-opt:hover { transform: translateY(-2px); }
-.theme-opt.active { border-color: var(--accent); }
-.theme-opt-preview { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-.theme-opt-name { font-size: 12px; font-weight: 600; }
+.theme-opt:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.theme-opt.active { border-color: var(--accent); background: var(--accent-dim); }
+.theme-opt-preview { width: 48px; height: 48px; border-radius: 14px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.theme-opt-name { font-size: 12px; font-weight: 700; color: var(--text); }
 
 .tabs { display: flex; justify-content: center; gap: 4px; padding: 0 16px; margin-bottom: 24px; }
 .tab { flex: 1; max-width: 160px; padding: 12px 8px; background: var(--surface); border: none; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: var(--radius); }
@@ -93,7 +124,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-.card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; transition: background 0.3s; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; transition: background 0.3s; border: var(--card-border); box-shadow: var(--shadow); }
 .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
 /* Theme Selection */
@@ -104,7 +135,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   cursor: pointer; transition: all 0.2s; text-align: center;
 }
 .theme-card:hover { transform: translateY(-2px); }
-.theme-card.selected { border-color: var(--accent); box-shadow: 0 0 20px rgba(0,230,118,0.15); }
+.theme-card.selected { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-dim); }
 .theme-emoji { font-size: 28px; margin-bottom: 6px; }
 .theme-name { font-size: 14px; font-weight: 700; }
 .theme-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
@@ -121,10 +152,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 .btn-generate {
   width: 100%; padding: 16px; border-radius: var(--radius); border: none;
-  background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #000;
+  background: var(--grad-btn); color: #fff;
   font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
-.btn-generate:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,230,118,0.3); }
+.btn-generate:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 .btn-generate:active { transform: scale(0.98); }
 
 /* Playlist */
@@ -153,10 +185,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .playlist-name-input { flex: 1; padding: 12px 16px; border-radius: 10px; border: 2px solid var(--surface2); background: var(--surface2); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
 .playlist-name-input:focus { border-color: var(--accent); }
 .btn-save { padding: 12px 20px; border-radius: 10px; border: none; background: var(--accent-dim); color: var(--accent); font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.btn-save:hover { background: var(--accent); color: #000; }
+.btn-save:hover { background: var(--accent); color: #fff; }
 
 .saved-playlist-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; border-radius: 10px; margin-bottom: 8px; background: var(--surface2); cursor: pointer; transition: all 0.15s; }
-.saved-playlist-item:hover { background: #2a2a3a; }
+.saved-playlist-item:hover { background: var(--accent-dim); }
 .saved-pl-info h4 { font-size: 14px; font-weight: 600; }
 .saved-pl-info p { font-size: 12px; color: var(--text2); margin-top: 2px; }
 .btn-icon { width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent; color: var(--text2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
@@ -172,8 +204,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .form-textarea { resize: vertical; min-height: 60px; }
 .form-row { display: flex; gap: 12px; }
 .form-row .form-group { flex: 1; }
-.btn-record { width: 100%; padding: 16px; border-radius: var(--radius); border: none; background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
-.btn-record:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(68,138,255,0.3); }
+.btn-record { width: 100%; padding: 16px; border-radius: var(--radius); border: none; background: var(--grad-record); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+.btn-record:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
 
 /* Dashboard */
 .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
@@ -196,7 +228,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .record-stat { font-size: 14px; font-weight: 600; }
 .record-stat span { color: var(--text2); font-size: 12px; font-weight: 400; }
 .record-playlist-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); background: var(--accent-dim); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
-.record-playlist-tag:hover { background: rgba(0,230,118,0.25); }
+.record-playlist-tag:hover { background: var(--accent-dim); }
 .record-memo { font-size: 13px; color: var(--text2); margin-top: 6px; }
 .record-delete { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--text2); cursor: pointer; font-size: 14px; opacity: 0; transition: all 0.15s; }
 .record-item:hover .record-delete { opacity: 1; }
@@ -219,7 +251,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .shuffle-btn:hover { color: var(--accent); background: var(--accent-dim); }
 
 /* My Playlist Tab */
-.mypl-card { background: var(--surface); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; }
+.mypl-card { background: var(--surface); border-radius: var(--radius); margin-bottom: 16px; overflow: hidden; border: var(--card-border); box-shadow: var(--shadow); }
 .mypl-header { padding: 18px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s; }
 .mypl-header:hover { background: var(--surface2); }
 .mypl-info h3 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
@@ -256,28 +288,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     <h3>테마 선택</h3>
     <div class="theme-options">
       <div class="theme-opt" onclick="setTheme('midnight')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#00e676,#448aff)">&#127769;</div>
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#7c5cff,#4dd9e8)">&#127769;</div>
         <div class="theme-opt-name">미드나잇</div>
       </div>
       <div class="theme-opt" onclick="setTheme('neon')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff00ff,#00ccff)">&#128302;</div>
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff2d95,#00d4ff)">&#128302;</div>
         <div class="theme-opt-name">네온</div>
       </div>
       <div class="theme-opt" onclick="setTheme('sunset')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff6b6b,#ffa07a)">&#127751;</div>
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#e85d3a,#f7c858)">&#127751;</div>
         <div class="theme-opt-name">선셋</div>
       </div>
-      <div class="theme-opt" onclick="setTheme('ocean')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#64ffda,#82aaff)">&#127754;</div>
-        <div class="theme-opt-name">오션</div>
+      <div class="theme-opt" onclick="setTheme('forest')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#2e8b57,#a8d8a0)">&#127795;</div>
+        <div class="theme-opt-name">포레스트</div>
       </div>
       <div class="theme-opt" onclick="setTheme('cherry')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff4d8a,#ff80ab)">&#127800;</div>
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#e84393,#fab1c8)">&#127800;</div>
         <div class="theme-opt-name">체리</div>
       </div>
-      <div class="theme-opt" onclick="setTheme('light')">
-        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#5856d6,#007aff)">&#9728;</div>
-        <div class="theme-opt-name">라이트</div>
+      <div class="theme-opt" onclick="setTheme('ocean')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#00bcd4,#4fc3f7)">&#127754;</div>
+        <div class="theme-opt-name">오션</div>
       </div>
     </div>
   </div>
