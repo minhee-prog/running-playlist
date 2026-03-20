@@ -76,6 +76,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 .song-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-bottom: 4px; transition: background 0.15s; }
 .song-item:hover { background: var(--surface2); }
+.song-play { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 16px; padding: 4px 6px; border-radius: 6px; transition: all 0.15s; text-decoration: none; display: flex; align-items: center; }
+.song-play:hover { color: #ff0000; background: rgba(255,0,0,0.1); }
 .song-num { width: 24px; text-align: center; color: var(--text2); font-size: 13px; font-weight: 600; }
 .song-info { flex: 1; min-width: 0; }
 .song-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -673,6 +675,7 @@ function renderGeneratedPlaylist() {
   document.getElementById('playlistSongs').innerHTML = currentPlaylist.map((song, i) => `
     <div class="song-item">
       <span class="song-num">${i + 1}</span>
+      <button class="song-play" onclick="event.stopPropagation(); ytSearch('${song.title.replace(/'/g,"\\'")}','${song.artist.replace(/'/g,"\\'")}')" title="YouTube에서 듣기">&#9654;</button>
       <div class="song-info">
         <div class="song-title">${song.title}</div>
         <div class="song-artist">${song.artist}</div>
@@ -760,6 +763,7 @@ function openPlaylistModal(id) {
   document.getElementById('modalSongs').innerHTML = pl.songs.map((s, i) => `
     <div class="song-item">
       <span class="song-num">${i + 1}</span>
+      <button class="song-play" onclick="event.stopPropagation(); ytSearch('${s.title.replace(/'/g,"\\'")}','${s.artist.replace(/'/g,"\\'")}')" title="YouTube에서 듣기">&#9654;</button>
       <div class="song-info"><div class="song-title">${s.title}</div><div class="song-artist">${s.artist}</div></div>
       <span class="song-dur">${formatDuration(s.dur || 0)}</span>
       <span class="song-bpm">${s.bpm}</span>
@@ -775,6 +779,7 @@ function showRecordPlaylist(recordId) {
   document.getElementById('modalSongs').innerHTML = r.playlist.songs.map((s, i) => `
     <div class="song-item">
       <span class="song-num">${i + 1}</span>
+      <button class="song-play" onclick="event.stopPropagation(); ytSearch('${s.title.replace(/'/g,"\\'")}','${s.artist.replace(/'/g,"\\'")}')" title="YouTube에서 듣기">&#9654;</button>
       <div class="song-info"><div class="song-title">${s.title}</div><div class="song-artist">${s.artist}</div></div>
       <span class="song-dur">${formatDuration(s.dur || 0)}</span>
       <span class="song-bpm">${s.bpm}</span>
@@ -830,6 +835,7 @@ function renderMyList() {
           ${pl.songs.map((s, i) => `
             <div class="song-item">
               <span class="song-num">${i + 1}</span>
+              <button class="song-play" onclick="event.stopPropagation(); ytSearch('${s.title.replace(/'/g,"\\\\'")}','${s.artist.replace(/'/g,"\\\\'")}')">&#9654;</button>
               <div class="song-info">
                 <div class="song-title">${s.title}</div>
                 <div class="song-artist">${s.artist}</div>
@@ -987,6 +993,7 @@ function deleteRecord(id) {
 
 // ===================== 유틸 =====================
 function formatPace(p) { const m = Math.floor(p); return `${m}'${Math.round((p-m)*60).toString().padStart(2,'0')}"`; }
+function ytSearch(title, artist) { window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(artist + ' ' + title), '_blank'); }
 function formatDuration(sec) { const m = Math.floor(sec/60); const s = sec % 60; return s ? `${m}분 ${s}초` : `${m}분`; }
 function formatDateKr(ds) { const d = new Date(ds); const days = ['일','월','화','수','목','금','토']; return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. (${days[d.getDay()]})`; }
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
