@@ -7,19 +7,81 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
+:root, [data-theme="midnight"] {
   --bg: #0f0f13; --surface: #1a1a24; --surface2: #22222f;
   --accent: #00e676; --accent2: #00c853; --accent-dim: rgba(0,230,118,0.15);
   --text: #eaeaea; --text2: #9a9ab0;
   --danger: #ff5252; --orange: #ff9100; --blue: #448aff; --purple: #b388ff;
   --pink: #ff80ab; --yellow: #ffd740; --cyan: #18ffff;
-  --radius: 14px;
+  --radius: 14px; --grad1: var(--accent); --grad2: var(--blue);
+  --chart-bar: rgba(0,230,118,0.3); --chart-border: rgba(0,230,118,0.8);
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+[data-theme="neon"] {
+  --bg: #0a0a14; --surface: #12122a; --surface2: #1c1c3a;
+  --accent: #ff00ff; --accent2: #cc00cc; --accent-dim: rgba(255,0,255,0.12);
+  --text: #f0e6ff; --text2: #8a7aaa;
+  --danger: #ff3366; --orange: #ff6600; --blue: #00ccff; --purple: #aa66ff;
+  --pink: #ff66aa; --yellow: #ffcc00; --cyan: #00ffcc;
+  --grad1: #ff00ff; --grad2: #00ccff;
+  --chart-bar: rgba(255,0,255,0.3); --chart-border: rgba(255,0,255,0.8);
+}
+[data-theme="sunset"] {
+  --bg: #1a1015; --surface: #261a20; --surface2: #33222a;
+  --accent: #ff6b6b; --accent2: #ee5a5a; --accent-dim: rgba(255,107,107,0.15);
+  --text: #fce4e4; --text2: #b08a8a;
+  --danger: #ff4444; --orange: #ff8844; --blue: #ffaa44; --purple: #ff7788;
+  --pink: #ff6699; --yellow: #ffcc66; --cyan: #ffaa88;
+  --grad1: #ff6b6b; --grad2: #ffa07a;
+  --chart-bar: rgba(255,107,107,0.3); --chart-border: rgba(255,107,107,0.8);
+}
+[data-theme="ocean"] {
+  --bg: #0a1628; --surface: #112240; --surface2: #1a3050;
+  --accent: #64ffda; --accent2: #4ad4b0; --accent-dim: rgba(100,255,218,0.12);
+  --text: #ccd6f6; --text2: #7a8ab5;
+  --danger: #ff5370; --orange: #f78c6c; --blue: #82aaff; --purple: #c792ea;
+  --pink: #ff80ab; --yellow: #ffcb6b; --cyan: #80cbc4;
+  --grad1: #64ffda; --grad2: #82aaff;
+  --chart-bar: rgba(100,255,218,0.3); --chart-border: rgba(100,255,218,0.8);
+}
+[data-theme="cherry"] {
+  --bg: #180c14; --surface: #2a1525; --surface2: #3a1f33;
+  --accent: #ff4d8a; --accent2: #e63d7a; --accent-dim: rgba(255,77,138,0.15);
+  --text: #ffe0ee; --text2: #aa7a90;
+  --danger: #ff3355; --orange: #ff7744; --blue: #ff80ab; --purple: #e080ff;
+  --pink: #ff4d8a; --yellow: #ffaa66; --cyan: #ff88cc;
+  --grad1: #ff4d8a; --grad2: #ff80ab;
+  --chart-bar: rgba(255,77,138,0.3); --chart-border: rgba(255,77,138,0.8);
+}
+[data-theme="light"] {
+  --bg: #f5f5f7; --surface: #ffffff; --surface2: #e8e8ee;
+  --accent: #5856d6; --accent2: #4745b5; --accent-dim: rgba(88,86,214,0.1);
+  --text: #1d1d1f; --text2: #6e6e73;
+  --danger: #ff3b30; --orange: #ff9500; --blue: #007aff; --purple: #af52de;
+  --pink: #ff2d55; --yellow: #ffcc00; --cyan: #32ade6;
+  --grad1: #5856d6; --grad2: #007aff;
+  --chart-bar: rgba(88,86,214,0.3); --chart-border: rgba(88,86,214,0.8);
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
 
-.header { text-align: center; padding: 32px 20px 16px; }
-.header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header { text-align: center; padding: 32px 20px 16px; position: relative; }
+.header h1 { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, var(--grad1), var(--grad2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .header p { color: var(--text2); font-size: 14px; margin-top: 4px; }
+.theme-btn { position: absolute; right: 20px; top: 36px; background: var(--surface); border: none; color: var(--text2); width: 36px; height: 36px; border-radius: 50%; font-size: 18px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+.theme-btn:hover { background: var(--surface2); color: var(--text); }
+
+.theme-picker-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px; }
+.theme-picker-overlay.show { display: flex; }
+.theme-picker { background: var(--surface); border-radius: var(--radius); padding: 24px; width: 100%; max-width: 360px; }
+.theme-picker h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; text-align: center; }
+.theme-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.theme-opt {
+  padding: 14px 8px; border-radius: 12px; border: 2px solid transparent;
+  cursor: pointer; text-align: center; transition: all 0.2s;
+}
+.theme-opt:hover { transform: translateY(-2px); }
+.theme-opt.active { border-color: var(--accent); }
+.theme-opt-preview { width: 40px; height: 40px; border-radius: 50%; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.theme-opt-name { font-size: 12px; font-weight: 600; }
 
 .tabs { display: flex; justify-content: center; gap: 4px; padding: 0 16px; margin-bottom: 24px; }
 .tab { flex: 1; max-width: 160px; padding: 12px 8px; background: var(--surface); border: none; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border-radius: var(--radius); }
@@ -31,7 +93,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-.card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; transition: background 0.3s; }
 .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 
 /* Theme Selection */
@@ -186,6 +248,39 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <div class="header">
   <h1>RunBeat</h1>
   <p>나만의 러닝 플레이리스트 & 기록</p>
+  <button class="theme-btn" onclick="toggleThemePicker()" title="테마 변경">&#127912;</button>
+</div>
+
+<div class="theme-picker-overlay" id="themePicker" onclick="if(event.target===this)toggleThemePicker()">
+  <div class="theme-picker">
+    <h3>테마 선택</h3>
+    <div class="theme-options">
+      <div class="theme-opt" onclick="setTheme('midnight')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#00e676,#448aff)">&#127769;</div>
+        <div class="theme-opt-name">미드나잇</div>
+      </div>
+      <div class="theme-opt" onclick="setTheme('neon')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff00ff,#00ccff)">&#128302;</div>
+        <div class="theme-opt-name">네온</div>
+      </div>
+      <div class="theme-opt" onclick="setTheme('sunset')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff6b6b,#ffa07a)">&#127751;</div>
+        <div class="theme-opt-name">선셋</div>
+      </div>
+      <div class="theme-opt" onclick="setTheme('ocean')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#64ffda,#82aaff)">&#127754;</div>
+        <div class="theme-opt-name">오션</div>
+      </div>
+      <div class="theme-opt" onclick="setTheme('cherry')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#ff4d8a,#ff80ab)">&#127800;</div>
+        <div class="theme-opt-name">체리</div>
+      </div>
+      <div class="theme-opt" onclick="setTheme('light')">
+        <div class="theme-opt-preview" style="background:linear-gradient(135deg,#5856d6,#007aff)">&#9728;</div>
+        <div class="theme-opt-name">라이트</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="tabs">
@@ -953,7 +1048,7 @@ function updateChart() {
   if (distanceChart) distanceChart.destroy();
   distanceChart = new Chart(ctx, {
     type: 'bar',
-    data: { labels, datasets: [{ data, backgroundColor: 'rgba(0,230,118,0.3)', borderColor: 'rgba(0,230,118,0.8)', borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
+    data: { labels, datasets: [{ data, backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-bar').trim(), borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-border').trim(), borderWidth: 2, borderRadius: 6, borderSkipped: false }] },
     options: {
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => `${c.parsed.y.toFixed(1)} km` } } },
@@ -998,7 +1093,29 @@ function formatDuration(sec) { const m = Math.floor(sec/60); const s = sec % 60;
 function formatDateKr(ds) { const d = new Date(ds); const days = ['일','월','화','수','목','금','토']; return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. (${days[d.getDay()]})`; }
 function showToast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
+// ===================== 테마 =====================
+function setTheme(name) {
+  document.documentElement.setAttribute('data-theme', name);
+  localStorage.setItem('rb_theme', name);
+  document.querySelectorAll('.theme-opt').forEach(el => el.classList.remove('active'));
+  const active = document.querySelector(`.theme-opt[onclick*="${name}"]`);
+  if (active) active.classList.add('active');
+  // 차트 색상 갱신
+  if (distanceChart) updateChart();
+  toggleThemePicker();
+}
+function toggleThemePicker() {
+  document.getElementById('themePicker').classList.toggle('show');
+}
+function initTheme() {
+  const saved = localStorage.getItem('rb_theme') || 'midnight';
+  document.documentElement.setAttribute('data-theme', saved);
+  const active = document.querySelector(`.theme-opt[onclick*="${saved}"]`);
+  if (active) active.classList.add('active');
+}
+
 // ===================== 초기화 =====================
+initTheme();
 document.getElementById('recordDate').valueAsDate = new Date();
 renderThemes();
 renderSavedPlaylists();
